@@ -586,7 +586,10 @@ def main():
             if IS_PROXY
             else None,
             args=[
-                "--no-sandbox"
+                "--no-sandbox",
+                "--disable-blink-features=AutomationControlled",
+                "--disable-infobars",
+                "--disable-dev-shm-usage",
             ],
         )
 
@@ -604,6 +607,10 @@ def main():
             ),
         )
 
+        context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            window.chrome = { runtime: {} };
+        """)
         page = context.new_page()
 
         try:
