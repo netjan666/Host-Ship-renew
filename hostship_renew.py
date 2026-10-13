@@ -1,3 +1,37 @@
+
+def handle_turnstile(page, max_wait=20):
+    log("🛡️ 正在检测并尝试处理 Cloudflare Turnstile 安全检查...")
+    start = time.time()
+    while time.time() - start < max_wait:
+        # 检查 submit 按钮是否已经可用
+        submit = first_visible(page, [
+            'button[type="submit"]',
+            'button:has-text("Login")',
+            'button:has-text("Sign in")',
+        ])
+        if submit:
+            try:
+                btn_text = submit.inner_text().strip()
+                if not submit.is_disabled() and "安全检查" not in btn_text and "security check" not in btn_text.lower():
+                    log(f"✅ 安全检查已通过，登录按钮可用 ({btn_text})")
+                    return True
+            except Exception:
+                pass
+
+        # 尝试点击 Cloudflare Turnstile iframe 内的复选框
+        for f in page.frames:
+            if "challenges.cloudflare.com" in f.url:
+                try:
+                    target = f.locator('input[type="checkbox"], #challenge-stage, .ctp-checkbox-label, body').first
+                    if target.count():
+                        log("🤖 点击 Turnstile 验证框...")
+                        target.click(force=True)
+                        time.sleep(2)
+                except Exception:
+                    pass
+        time.sleep(1)
+    return False
+
 # Customized for netjan666 - Every 10 days renewal check
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -328,6 +362,9 @@ def login_if_needed(page):
     email.fill(HOSTSHIP_LOGIN)
     password.fill(HOSTSHIP_PASSWORD)
 
+    # 尝试处理 Turnstile 验证
+    handle_turnstile(page, max_wait=25)
+
     submit = first_visible(
         page,
         [
@@ -342,7 +379,11 @@ def login_if_needed(page):
         log("❌ 没找到登录按钮")
         return False
 
-    submit.click()
+    if submit.is_disabled():
+        log("⚠️ 提交按钮依然处于禁用状态（Cloudflare 拦截），尝试强制点击...")
+        submit.click(force=True)
+    else:
+        submit.click()
 
     page.wait_for_timeout(3000)
 
