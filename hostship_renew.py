@@ -17,6 +17,15 @@ import urllib.error
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+BJ_TZ = ZoneInfo("Asia/Shanghai")
+PANEL_URL = "https://panel.host-ship.com"
+
+def log(msg):
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
+
+def beijing_now():
+    return datetime.now(BJ_TZ)
+
 # ---------- 配置区 ----------
 SERVER_URL = os.getenv("SERVER_URL", "https://panel.host-ship.com/server/11325742").strip()
 SERVER_ID = os.getenv("SERVER_ID", "").strip()
@@ -32,22 +41,12 @@ if not API_KEY:
             log("💡 成功从 HOSTSHIP_PASSWORD 中识别出 ptlc_ 凭证！")
             break
 
-
 TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN", "").strip()
 TG_CHAT_ID = os.getenv("TG_CHAT_ID", "").strip()
 MANUAL_RUN = os.getenv("MANUAL_RUN", "false").lower() == "true"
 
 MAX_ATTEMPTS = int(os.getenv("MAX_ATTEMPTS", "5"))
 RENEW_INTERVAL = int(os.getenv("RENEW_INTERVAL", "61"))
-
-BJ_TZ = ZoneInfo("Asia/Shanghai")
-PANEL_URL = "https://panel.host-ship.com"
-
-def log(msg):
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
-
-def beijing_now():
-    return datetime.now(BJ_TZ)
 
 def tg_notify(text):
     if not TG_BOT_TOKEN or not TG_CHAT_ID:
@@ -79,9 +78,9 @@ def main():
         return 0
 
     if not API_KEY:
-        msg = "❌ 缺失 API_KEY (ptlc_xxxx)，请在 GitHub Secrets 中配置 API_KEY！"
+        msg = "❌ 缺失 API_KEY (ptlc_xxxx)，请在 HOSTSHIP_PASSWORD 中填入以 ptlc_ 开头的 API 凭证！"
         log(msg)
-        tg_notify(f"❌ Host-Ship 续期失败\n\n原因: 缺失 API_KEY (ptlc_xxxx)\n请在 GitHub Secrets 中添加变量 API_KEY！")
+        tg_notify(f"❌ Host-Ship 续期失败\n\n原因: 缺失 API_KEY\n请在 HOSTSHIP_PASSWORD 中填入 ptlc_ 凭证！")
         return 1
 
     renew_url = f"{PANEL_URL}/api/client/servers/{SERVER_ID}/renew"
