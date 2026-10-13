@@ -1,3 +1,4 @@
+# Customized for netjan666 - Every 10 days renewal check
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
