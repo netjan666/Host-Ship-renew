@@ -23,7 +23,15 @@ SERVER_ID = os.getenv("SERVER_ID", "").strip()
 if not SERVER_ID and SERVER_URL:
     SERVER_ID = SERVER_URL.rstrip("/").split("/")[-1]
 
+# 优先读取 API_KEY，如果 workflow 未显式注入，则自动从已注入的 HOSTSHIP_PASSWORD 或 HOSTSHIP_LOGIN 中识别 ptlc_ 凭证
 API_KEY = os.getenv("API_KEY", "").strip()
+if not API_KEY:
+    for candidate in [os.getenv("HOSTSHIP_PASSWORD", "").strip(), os.getenv("HOSTSHIP_LOGIN", "").strip()]:
+        if candidate.startswith("ptlc_"):
+            API_KEY = candidate
+            log("💡 成功从 HOSTSHIP_PASSWORD 中识别出 ptlc_ 凭证！")
+            break
+
 
 TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN", "").strip()
 TG_CHAT_ID = os.getenv("TG_CHAT_ID", "").strip()
