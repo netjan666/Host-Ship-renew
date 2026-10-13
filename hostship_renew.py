@@ -504,6 +504,12 @@ def confirm_if_needed(page):
 
 
 def main():
+    # netjan666 专属配置：每 10 天检查一次（每月 1, 11, 21, 31 号）
+    now_bj = beijing_now()
+    if not MANUAL_RUN and now_bj.day not in (1, 11, 21, 31):
+        log(f"📅 今日为 {now_bj.strftime('%Y-%m-%d')}，非 10 天周期续期日（每月 1, 11, 21, 31 号），自动跳过本次检查。")
+        return 0
+
     if not SERVER_URL.startswith(
         "https://panel.host-ship.com/server/"
     ):
